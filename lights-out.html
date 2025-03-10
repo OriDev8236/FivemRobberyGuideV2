@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lights Out 4x4</title>
+    <script src="https://kit.fontawesome.com/7715173514.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Rubik", Arial, sans-serif;
+            background-color: #222834;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: white;
+        }
+        #grid {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 10px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #035114;
+            cursor: pointer;
+            border: none;
+        }
+        .on {
+            background-color: #35f050;
+        }
+        #winMessage, #loseMessage {
+            display: none;
+            margin-top: 20px;
+            font-size: 1.2rem;
+            color: white;
+        }
+        #resetButton {
+            font-family: "Rubik", Arial, sans-serif;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            background-color: #35f050;
+            border: none;
+            color: white;
+            border-radius: 40px;
+        }
+        #homePage {
+            position: absolute;
+            top: 2%;
+            left: 1%;
+            text-decoration: none;
+            font-family: "Rubik", Arial, sans-serif;
+            padding: 10px 10px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <a id="homePage" href="lights-out-menu.html"><i class="fa-solid fa-chevron-left"></i> Return</a>
+    <h1>Lights Out</h1>
+    <div id="grid"></div>
+    <div id="winMessage">Congratulations, you won!</div>
+    <div id="loseMessage">You lost! Try again.</div>
+    <button id="resetButton">Play Again</button>
+
+    <script>
+        const grid = document.getElementById('grid');
+        const winMessage = document.getElementById('winMessage');
+        const loseMessage = document.getElementById('loseMessage');
+        const resetButton = document.getElementById('resetButton');
+        const size = 4;
+        const maxAttempts = 27;
+        let cells = [];
+        let attempts = 0;
+
+        // Toggle the light state
+        function toggleLight(cell) {
+            cell.classList.toggle('on');
+        }
+
+        // Check if the player has won
+        function checkWin() {
+            const allOn = cells.every(cell => cell.classList.contains('on'));
+            if (allOn) {
+                winMessage.style.display = 'block';
+                disableGrid();
+            }
+        }
+
+        // Disable the grid
+        function disableGrid() {
+            cells.forEach(cell => {
+                cell.removeEventListener('click', handleCellClick);
+            });
+        }
+
+        // Handle cell click
+        function handleCellClick(event) {
+            attempts++;
+            if (attempts > maxAttempts) {
+                loseMessage.style.display = 'block';
+                disableGrid();
+                return;
+            }
+
+            const row = parseInt(event.target.dataset.row);
+            const col = parseInt(event.target.dataset.col);
+
+            // Toggle clicked cell
+            toggleLight(event.target);
+
+            // Toggle adjacent cells
+            const adjacent = [
+                { r: row - 1, c: col }, // Up
+                { r: row + 1, c: col }, // Down
+                { r: row, c: col - 1 }, // Left
+                { r: row, c: col + 1 }  // Right
+            ];
+
+            adjacent.forEach(pos => {
+                if (pos.r >= 0 && pos.r < size && pos.c >= 0 && pos.c < size) {
+                    const adjacentCell = cells.find(cell =>
+                        parseInt(cell.dataset.row) === pos.r &&
+                        parseInt(cell.dataset.col) === pos.c
+                    );
+                    if (adjacentCell) toggleLight(adjacentCell);
+                }
+            });
+
+            checkWin();
+        }
+
+        // Create a solvable grid
+        function createSolvableGrid() {
+            // Start with all lights on
+            cells.forEach(cell => cell.classList.add('on'));
+
+            // Apply random clicks to generate a solvable configuration
+            for (let i = 0; i < size * size; i++) {
+                if (Math.random() > 0.5) {
+                    const randomCell = cells[Math.floor(Math.random() * cells.length)];
+                    handleCellClick({ target: randomCell });
+                }
+            }
+        }
+
+        // Initialize the grid
+        function initializeGrid() {
+            grid.innerHTML = '';
+            cells = [];
+            attempts = 0;
+
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    cell.dataset.row = row;
+                    cell.dataset.col = col;
+                    grid.appendChild(cell);
+                    cells.push(cell);
+                }
+            }
+
+            createSolvableGrid();
+
+            // Attach click event to all cells
+            cells.forEach(cell => {
+                cell.addEventListener('click', handleCellClick);
+            });
+
+            winMessage.style.display = 'none';
+            loseMessage.style.display = 'none';
+        }
+
+        // Reset the game
+        function resetGame() {
+            initializeGrid();
+        }
+
+        // Initialize the game on page load
+        resetGame();
+
+        // Attach reset button event
+        resetButton.addEventListener('click', resetGame);
+    </script>
+</body>
+</html>

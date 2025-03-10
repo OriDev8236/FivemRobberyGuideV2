@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4-Digit Code Game</title>
+    <script src="https://kit.fontawesome.com/7715173514.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Rubik', Arial, sans-serif;
+            background-color: #222834;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        #homePage {
+            position: absolute;
+            top: 2%;
+            left: 1%;
+            text-decoration: none;
+            font-family: 'Rubik', Arial, sans-serif;
+            padding: 10px 10px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: white;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        #gameArea {
+            margin-top: 20px;
+        }
+        #guessInput {
+            font-size: 1.2rem;
+            padding: 10px;
+            margin-top: 10px;
+            width: 200px;
+            text-align: center;
+            background-color: #2a3a4c;
+            border: 1px solid #555;
+            color: white;
+            border: none;
+            border-radius: 20px;
+        }
+        #guessInput:focus {
+        outline: none;
+        }
+        #feedback {
+            font-size: 1.5rem;
+            margin-top: 10px;
+        }
+        #timer, #attempts {
+            font-size: 1.5rem;
+            margin-top: 20px;
+        }
+        #previousGuesses {
+            font-size: 1rem;
+            margin-top: 20px;
+            text-align: left;
+            max-height: max-content;
+            overflow-y: auto;
+        }
+        .guess {
+            margin-bottom: 5px;
+        }
+        button{
+            margin-top: 20px;
+            padding: 10px 20px;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 20px;
+            background-color: #35f050;
+            transition: 0.3s;
+        }
+        button:hover{
+            background-color: #1ea532;
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+    <a id="homePage" href="index.html"><i class="fa-solid fa-house"></i> Home Page</a>
+    <h1>Guess the 4-Digit Code</h1>
+    
+    <div id="gameArea">
+        <input type="text" id="guessInput" placeholder="Enter 4-digit code" maxlength="4" pattern="\d{4}">
+        <button id="submitButton">Submit Guess</button>
+        <div id="feedback"></div>
+        <div id="timer"></div>
+        <div id="attempts"></div>
+        <button id="resetButton">Reset Game</button>
+    </div>
+
+    <div id="previousGuesses">
+        <h3>Previous Guesses:</h3>
+        <!-- תוצאות הניחושים הקודמים יוצגו כאן -->
+    </div>
+
+    <script>
+        // פונקציה ליצירת קוד אקראי
+        function generateRandomCode() {
+            return Math.floor(1000 + Math.random() * 9000).toString(); // קוד אקראי בין 1000 ל-9999
+        }
+
+        let secretCode = generateRandomCode(); // הקוד הסודי שנבחר אקראי בהתחלה
+        const maxTries = 18;  // עד 18 ניחושים
+        let attempts = 0;
+        let timer;
+        let timeLeft = 180; // זמן למשחק בשניות
+        const previousGuesses = []; // רשימה של כל הניחושים הקודמים עם תוצאותיהם
+
+        // מתחיל את המשחק מחדש
+        function resetGame() {
+            secretCode = generateRandomCode(); // משנה את הקוד הסודי כל פעם שלוחצים על איפוס
+            attempts = 0;
+            timeLeft = 180;
+            document.getElementById('feedback').textContent = '';
+            document.getElementById('guessInput').value = '';
+            // מנקה את רשימת הניחושים הקודמים לפני שמתחילים משחק חדש
+            previousGuesses.length = 0; 
+            document.getElementById('previousGuesses').innerHTML = '<h3>Previous Guesses:</h3>'; 
+            updateAttempts();
+            startTimer();
+            document.getElementById('submitButton').disabled = false; // הופך את כפתור השליחה לזמין מחדש
+        }
+
+        // פונקציה להתחלת הטיימר
+        function startTimer() {
+            clearInterval(timer);
+            timer = setInterval(function() {
+                if (timeLeft <= 0) {
+                    clearInterval(timer);
+                    alert("Time's up! Game Over. The secret code was " + secretCode); // הצגת הקוד הסודי בסיום
+                    document.getElementById('submitButton').disabled = true; // Disable the submit button when time is up
+                } else {
+                    document.getElementById('timer').textContent = `Time Left: ${timeLeft}s`;
+                    timeLeft--;
+                }
+            }, 1000);
+        }
+
+        // בודק אם הניחוש נכון ומחזיר פידבק
+        function checkGuess() {
+            if (attempts >= maxTries || timeLeft <= 0) { // אם הגענו למספר הניסיונות המקסימלי או הזמן נגמר, לא ניתן לשלוח ניחוש
+                alert("You've reached the maximum number of attempts or time's up. Game Over. The secret code was " + secretCode);
+                return;
+            }
+
+            const guess = document.getElementById('guessInput').value;
+            if (guess.length !== 4 || isNaN(guess)) {
+                alert("Please enter a valid 4-digit number.");
+                return;
+            }
+            attempts++;
+            let feedback = '';
+            let secretCodeCopy = secretCode.split(''); // יצירת עותק של הקוד הסודי
+
+            // חישוב הפידבק
+            for (let i = 0; i < 4; i++) {
+                if (guess[i] === secretCode[i]) {
+                    feedback += '!'; // ספרה נכונה במקום הנכון
+                    secretCodeCopy[i] = null; // מניחים שאין יותר מקום לאותם ספרות
+                }
+            }
+
+            for (let i = 0; i < 4; i++) {
+                if (guess[i] !== secretCode[i] && secretCodeCopy.includes(guess[i])) {
+                    feedback += '*'; // ספרה נכונה במקום לא נכון
+                    secretCodeCopy[secretCodeCopy.indexOf(guess[i])] = null; // מניחים שאין מקום לאותם ספרות
+                }
+            }
+
+            // מציג את הפידבק
+            document.getElementById('feedback').textContent = feedback || "No correct digits!";
+            updateAttempts(); // מעדכן את מספר הניסיונות
+
+            // מוסיף את הניחוש לתוצאות הקודמות
+            previousGuesses.push(`${guess} - ${feedback}`);
+            displayPreviousGuesses();
+
+            if (feedback === '!!!!') {
+                alert("Congratulations! You've guessed the code! The secret code was " + secretCode); // הצגת הקוד הסודי כשמנחשים נכון
+                clearInterval(timer); // סיום המשחק
+                document.getElementById('submitButton').disabled = true; // Disable the submit button after winning
+            }
+        }
+
+        // עדכון ומציג את מספר הניסיונות שנותרו
+        function updateAttempts() {
+            const remainingAttempts = Math.max(0, maxTries - attempts); // מוודא שמספר הניסיונות לא יפחת מ-0
+            document.getElementById('attempts').textContent = `Remaining Attempts: ${remainingAttempts}`;
+        }
+
+        // מציג את כל הניחושים הקודמים
+        function displayPreviousGuesses() {
+            const guessesContainer = document.getElementById('previousGuesses');
+            let guessesHtml = '<h3>Previous Guesses:</h3>';
+            previousGuesses.forEach(guess => {
+                guessesHtml += `<div class="guess">${guess}</div>`;
+            });
+            guessesContainer.innerHTML = guessesHtml;
+        }
+
+        // מאזין לאירוע לחיצה על כפתור לשליחת הניחוש
+        document.getElementById('submitButton').addEventListener('click', checkGuess);
+
+        // מאזין לאירוע לחיצה על כפתור לאתחול המשחק
+        document.getElementById('resetButton').addEventListener('click', resetGame);
+
+        // אתחול המשחק
+        resetGame();
+    </script>
+</body>
+</html>

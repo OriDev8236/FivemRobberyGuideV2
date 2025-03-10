@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search People</title>
+    <script src="https://kit.fontawesome.com/7715173514.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Rubik", Arial, sans-serif;
+            background-color: #222834;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            color: white;
+        }
+        h1 {
+            margin-bottom: 20px;
+        }
+        #searchForm {
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            width: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+        input[type="text"] {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background-color: #444;
+            color: white;
+        }
+        button {
+            padding: 10px;
+            font-size: 1rem;
+            background-color: #35f050;
+            border: none;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #2ec043;
+        }
+        #homePage {
+            position: absolute;
+            top: 2%;
+            left: 1%;
+            text-decoration: none;
+            font-size: 1.4rem;
+            color: white;
+            cursor: pointer;
+        }
+        #results {
+            margin-top: 30px;
+            width: 400px;
+            background-color: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            display: none;
+        }
+        .result-item {
+            margin-bottom: 15px;
+        }
+        .result-item strong {
+            color: #35f050;
+        }
+        /* עיצוב להודעת השגיאה */
+        .error-message {
+            color: #ff6b6b;
+            font-size: 0.9rem;
+            margin-top: 10px;  /* הוספתי רווח לפני הודעת השגיאה */
+        }
+    </style>
+</head>
+<body>
+    <a id="homePage" href="index.html"><i class="fa-solid fa-house"></i> Home Page</a>
+    
+    <h1>Search for People in Database (Not updated)</h1>
+    <form id="searchForm">
+        <input type="text" id="searchInput" placeholder="Enter first name, last name, age, or state" />
+        <button type="submit" id="searchButton" disabled>Search</button> <!-- הכפתור מושבת בברירת מחדל -->
+        <div id="errorMessage" class="error-message" style="display: none;">* Please enter at least 2 characters</div> <!-- הודעת שגיאה -->
+    </form>
+
+    <div id="results">
+        <h2>Results:</h2>
+        <div id="resultList"></div>
+    </div>
+
+    <script>
+        const people = [
+            { "first_name": "Sebastian", "last_name": "Lee", "age": 39, "state": "Iowa" },
+            { "first_name": "Emma", "last_name": "Parker", "age": 32, "state": "Minnesota" },
+            { "first_name": "Ava", "last_name": "Wright", "age": 31, "state": "SouthDakota" },
+            { "first_name": "Skylar", "last_name": "Morris", "age": 27, "state": "Oregon" },
+            { "first_name": "Grace", "last_name": "Allen", "age": 24, "state": "NorthCarolina" },
+            { "first_name": "Eli", "last_name": "Hernandez", "age": 30, "state": "NewJersey" },
+            { "first_name": "Amelia", "last_name": "Smith", "age": 23, "state": "NorthDakota" },
+            { "first_name": "Benjamin", "last_name": "Taylor", "age": 19, "state": "Montana" },
+            { "first_name": "Daniel", "last_name": "Hughes", "age": 29, "state": "Illinois" },
+            { "first_name": "Nathan", "last_name": "Molina", "age": 30, "state": "California" },
+            { "first_name": "Hannah", "last_name": "Lin", "age": 32, "state": "Texas" },
+            { "first_name": "Chloe", "last_name": "Butler", "age": 36, "state": "Arkansas" },
+            { "first_name": "Elizabeth", "last_name": "Barnes", "age": 39, "state": "WestVirginia" },
+            { "first_name": "Sophia", "last_name": "Adams", "age": 45, "state": "Mississippi" },
+            { "first_name": "Grayson", "last_name": "Gonzalez", "age": 30, "state": "Virginia" },
+            { "first_name": "Isla", "last_name": "Silva", "age": 34, "state": "California" },
+            { "first_name": "Sophia", "last_name": "Nguyen", "age": 28, "state": "Florida" },
+            { "first_name": "Samantha", "last_name": "Hayes", "age": 26, "state": "Wisconsin" },
+            { "first_name": "Nova", "last_name": "Chen", "age": 25, "state": "NorthDakota" },
+            { "first_name": "Benjamin", "last_name": "Johnson", "age": 21, "state": "NewHampshire" },
+            { "first_name": "Roman", "last_name": "Sanchez", "age": 29, "state": "Louisiana" },
+            { "first_name": "Caden", "last_name": "Rivera", "age": 24, "state": "NorthDakota" },
+            { "first_name": "Liam", "last_name": "Turner", "age": 30, "state": "NorthCarolina" },
+            { "first_name": "Lily", "last_name": "Morris", "age": 28, "state": "Georgia" },
+            { "first_name": "Valentina", "last_name": "Peterson", "age": 25, "state": "Kentucky" },
+            { "first_name": "Ezra", "last_name": "Washington", "age": 32, "state": "Missouri" },
+            { "first_name": "Sophia", "last_name": "Garcia", "age": 42, "state": "Alaska" },
+            { "first_name": "Aubrey", "last_name": "Diaz", "age": 33, "state": "Virginia" }
+        ];
+
+        const searchForm = document.getElementById("searchForm");
+        const resultList = document.getElementById("resultList");
+        const results = document.getElementById("results");
+        const searchButton = document.getElementById("searchButton");
+        const searchInput = document.getElementById("searchInput");
+        const errorMessage = document.getElementById("errorMessage");
+
+        // פונקציה שתעדכן אם הכפתור יהיה זמין או מושבת
+        function toggleSearchButton() {
+            if (searchInput.value.length >= 2) {
+                searchButton.disabled = false;
+                errorMessage.style.display = "none";  // הסתרת הודעת השגיאה אם יש מספיק תווים
+            } else {
+                searchButton.disabled = true;
+                if (searchInput.value.length > 0) {
+                    errorMessage.style.display = "block";  // הצגת הודעת השגיאה אם יש פחות מ-2 תווים
+                } else {
+                    errorMessage.style.display = "none";  // אם השדה ריק, לא להציג הודעה
+                }
+            }
+        }
+
+        searchInput.addEventListener("input", toggleSearchButton);
+
+        searchForm.addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const searchQuery = searchInput.value.toLowerCase();
+
+            const filteredResults = people.filter(person => {
+                return (
+                    person.first_name.toLowerCase().includes(searchQuery) ||
+                    person.last_name.toLowerCase().includes(searchQuery) ||
+                    person.age.toString().includes(searchQuery) ||
+                    person.state.toLowerCase().includes(searchQuery)
+                );
+            });
+
+            resultList.innerHTML = '';
+            if (filteredResults.length > 0) {
+                filteredResults.forEach(person => {
+                    const resultItem = document.createElement("div");
+                    resultItem.classList.add("result-item");
+                    resultItem.innerHTML = `
+                        <strong>First Name:</strong> ${person.first_name}<br>
+                        <strong>Last Name:</strong> ${person.last_name}<br>
+                        <strong>Age:</strong> ${person.age}<br>
+                        <strong>Residence:</strong> ${person.state}
+                    `;
+                    resultList.appendChild(resultItem);
+                });
+                results.style.display = "block";
+            } else {
+                resultList.innerHTML = "No results found.";
+                results.style.display = "block";
+            }
+        });
+    </script>
+</body>
+</html>

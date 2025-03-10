@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lights Out Solver</title>
+    <script src="https://kit.fontawesome.com/7715173514.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Rubik", Arial, sans-serif;
+            background-color: #222834;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+        #homePage {
+            position: absolute;
+            top: 2%;
+            left: 1%;
+            text-decoration: none;
+            font-family: "Rubik", Arial, sans-serif;
+            padding: 10px 10px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: white;
+        }
+        h1, p {
+            margin-bottom: 20px;
+            color: white;
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 100px);
+            grid-gap: 10px;
+        }
+        .cell {
+            width: 100px;
+            height: 100px;
+            background-color: #035114;
+            cursor: pointer;
+            border: none;
+        }
+        .cell.on {
+            background-color: #35f050;
+        }
+        .cell.highlight {
+            background-color: rgb(229, 255, 0);
+        }
+        .button {
+            font-family: "Rubik", Arial, sans-serif;
+            margin-top: 20px;
+            padding: 10px 20px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            background-color: #35f050;
+            border: none;
+            color: white;
+            border-radius: 40px;
+        }
+    </style>
+</head>
+<body>
+    <a id="homePage" href="lights-out-menu.html"><i class="fa-solid fa-chevron-left"></i> Return</a>
+    <h1>Lights Out Solver</h1>
+    <p>Click the cells to toggle their state, then click "Solve" to find the solution.</p>
+
+    <div class="grid" id="grid"></div>
+    <button class="button" onclick="solveLightsOut()">Solve</button>
+    <button class="button" id="nextStepButton" style="display: none;" onclick="showNextStep()">Next Step</button>
+    <button class="button" onclick="resetBoard()">Reset</button>
+
+    <p id="stepCounter" style="margin-top: 20px; display: none;"></p>
+
+    <script>
+        const gridSize = 4;
+        const grid = document.getElementById('grid');
+        const nextStepButton = document.getElementById('nextStepButton');
+        const stepCounter = document.getElementById('stepCounter');
+
+        // Initialize the grid
+        let board = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+        let solutionSteps = [];
+        let currentStep = 0;
+
+        function renderGrid(highlight = []) {
+            grid.innerHTML = '';
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('cell');
+                    if (board[row][col] === 1) {
+                        cell.classList.add('on');
+                    }
+                    if (highlight.some(([r, c]) => r === row && c === col)) {
+                        cell.classList.add('highlight');
+                    }
+                    cell.addEventListener('click', () => toggleCell(row, col));
+                    grid.appendChild(cell);
+                }
+            }
+        }
+
+        function toggleCell(row, col) {
+            board[row][col] = board[row][col] === 1 ? 0 : 1;
+            renderGrid();
+        }
+
+        function solveLightsOut() {
+            const solution = solve(board);
+            if (solution) {
+                solutionSteps = solution;
+                currentStep = 0;
+                nextStepButton.style.display = 'inline-block';
+                stepCounter.style.display = 'block';
+                showNextStep(); // Automatically show the first step
+            } else {
+                alert('No solution found.');
+            }
+        }
+
+        function showNextStep() {
+            if (currentStep < solutionSteps.length) {
+                const [row, col] = solutionSteps[currentStep];
+                toggleCell(row, col);
+                renderGrid([[row, col]]);
+                currentStep++;
+                updateStepCounter();
+            } else {
+                alert('Puzzle solved!');
+                nextStepButton.style.display = 'none';
+                stepCounter.style.display = 'none';
+            }
+        }
+
+        function resetBoard() {
+            board = Array(gridSize).fill(null).map(() => Array(gridSize).fill(0));
+            solutionSteps = [];
+            currentStep = 0;
+            nextStepButton.style.display = 'none';
+            stepCounter.style.display = 'none';
+            renderGrid();
+        }
+
+        function updateStepCounter() {
+            stepCounter.textContent = `Steps: ${currentStep} / ${solutionSteps.length}`;
+        }
+
+        function solve(board) {
+            const size = board.length;
+            const matrix = [];
+            const target = [];
+
+            for (let row = 0; row < size; row++) {
+                for (let col = 0; col < size; col++) {
+                    const equation = Array(size * size).fill(0);
+                    const index = row * size + col;
+
+                    // Toggle the current cell
+                    equation[index] = 1;
+
+                    // Toggle neighbors
+                    if (row > 0) equation[(row - 1) * size + col] = 1; // Up
+                    if (row < size - 1) equation[(row + 1) * size + col] = 1; // Down
+                    if (col > 0) equation[row * size + col - 1] = 1; // Left
+                    if (col < size - 1) equation[row * size + col + 1] = 1; // Right
+
+                    matrix.push(equation);
+                    target.push(board[row][col] === 0 ? 1 : 0); // Flip the target to make all cells ON
+                }
+            }
+
+            // Solve the system of linear equations mod 2
+            const solution = gaussianEliminationMod2(matrix, target);
+            if (solution) {
+                const toggleCells = [];
+                for (let i = 0; i < solution.length; i++) {
+                    if (solution[i] === 1) {
+                        toggleCells.push([Math.floor(i / size), i % size]);
+                    }
+                }
+                return toggleCells;
+            }
+            return null;
+        }
+
+        function gaussianEliminationMod2(matrix, target) {
+            const size = target.length;
+
+            for (let col = 0; col < size; col++) {
+                let pivot = col;
+                for (let row = col; row < size; row++) {
+                    if (matrix[row][col] === 1) {
+                        pivot = row;
+                        break;
+                    }
+                }
+
+                if (matrix[pivot][col] === 0) continue; // No pivot in this column
+
+                // Swap rows
+                [matrix[col], matrix[pivot]] = [matrix[pivot], matrix[col]];
+                [target[col], target[pivot]] = [target[pivot], target[col]];
+
+                // Eliminate below
+                for (let row = col + 1; row < size; row++) {
+                    if (matrix[row][col] === 1) {
+                        for (let k = col; k < size; k++) {
+                            matrix[row][k] ^= matrix[col][k];
+                        }
+                        target[row] ^= target[col];
+                    }
+                }
+            }
+
+            // Back substitution
+            for (let row = size - 1; row >= 0; row--) {
+                if (matrix[row][row] === 0 && target[row] === 1) {
+                    return null; // No solution
+                }
+                for (let col = row + 1; col < size; col++) {
+                    target[row] ^= matrix[row][col] * target[col];
+                }
+            }
+
+            return target;
+        }
+
+        renderGrid();
+    </script>
+</body>
+</html>

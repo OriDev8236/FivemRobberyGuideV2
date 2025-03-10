@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="he">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <script src="https://kit.fontawesome.com/7715173514.js" crossorigin="anonymous"></script>
+    <title>Timing Game</title>
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: 'Rubik', Arial, sans-serif;
+            background-color: #222834;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        #homePage {
+            position: absolute;
+            top: 2%;
+            left: 1%;
+            text-decoration: none;
+            font-family: 'Rubik', Arial, sans-serif;
+            padding: 10px 10px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: white;
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        #game-container {
+            position: relative;
+            width: 100%;
+            height: 200px;
+            background-color: none;
+        }
+
+        #line {
+            position: absolute;
+            bottom: 50px;
+            left: 0;
+            width: 100%;
+            height: 7.5%;
+            background-color: black;
+            z-index: 0;
+            border-radius: 5px;
+        }
+
+        #blue-part {
+            position: absolute;
+            height: 7.5%;
+            background-color: #00cc00;
+            width: 100px;
+            bottom: 50px;
+            z-index: 1;
+        }
+
+        #green-arrow {
+            position: absolute;
+            height: 7.5%;
+            background-color: #0066ff;
+            width: 0%;
+            bottom: 50px;
+            z-index: 2;
+            border-top-left-radius: 5px;
+            border-bottom-left-radius: 5px;
+        }
+
+        #status {
+            margin-top: 20px;
+            font-size: 2rem;
+        }
+
+        .winner {
+            font-size: 36px;
+            font-weight: bold;
+            color: green;
+        }
+
+        .loser {
+            font-size: 36px;
+            font-weight: bold;
+            color: red;
+        }
+
+        .instruction {
+            font-size: 24px;
+            margin-top: 20px;
+        }
+
+        #restart-btn, #start-btn {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #35f050;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+
+        #restart-btn:hover, #start-btn:hover{
+            background-color: #1ea532;
+            transform: translateY(-5px);
+        }
+
+        #start-btn {
+            display: block;
+        }
+
+        #restart-btn {
+            display: none;
+        }
+
+    </style>
+</head>
+<body>
+
+    <a id="homePage" href="index.html"><i class="fa-solid fa-house"></i> Home Page</a>
+
+    <h1>Timing Game</h1>
+    <div id="game-container">
+        <p id="instruction" class="instruction">Press 'E' when the bar hits green area</p>
+        <div id="line"></div>
+        <div id="blue-part"></div>
+        <div id="green-arrow"></div>
+    </div>
+
+    <div id="status" class="status"></div>
+    <button id="start-btn"><i class="fa-solid fa-play"></i> Start Game</button>
+    <button id="restart-btn"><i class="fa-solid fa-rotate-right"></i> Play Again</button>
+
+    <script>
+        const bluePart = document.getElementById('blue-part');
+        const greenArrow = document.getElementById('green-arrow');
+        const status = document.getElementById('status');
+        const instruction = document.getElementById('instruction');
+        const restartBtn = document.getElementById('restart-btn');
+        const startBtn = document.getElementById('start-btn');
+
+        let bluePartPosition = Math.random() * (window.innerWidth / 2) + (window.innerWidth / 2); // מיקום אקראי ב-50% האחרונים
+        let arrowPosition = 0;
+        let gameActive = false;  // המשחק לא מתחיל אוטומטית
+        let round = 1; // מספר סבבים
+        let winningRounds = 0; // ספירת סבבים מנצחים
+
+        // Update positions
+        function updatePositions() {
+            bluePart.style.left = bluePartPosition + 'px';
+        }
+
+        // Move the green arrow smoothly, increasing width quickly
+        function moveArrow() {
+            if (!gameActive) return;
+
+            let currentWidth = parseFloat(greenArrow.style.width);
+            if (currentWidth < 100) {
+                currentWidth += 0.5; // הגביר את הקצב ל-0.5% לכל פעם
+                greenArrow.style.width = currentWidth + '%';
+                requestAnimationFrame(moveArrow); // קורא לפונקציה שוב
+            } else {
+                greenArrow.style.width = '100%'; // החץ הגיע לסופו
+                checkGameStatus();
+            }
+        }
+
+        // Reset the green arrow width after each round
+        function resetGreenArrow() {
+            greenArrow.style.width = '0%';
+        }
+
+        // Update status based on the result of the game
+        function checkGameStatus() {
+            const arrowLeft = bluePartPosition;
+            const arrowRight = bluePartPosition + bluePart.offsetWidth;
+            const greenArrowWidth = greenArrow.offsetWidth;
+
+            if (greenArrowWidth >= arrowLeft && greenArrowWidth <= arrowRight) {
+                winningRounds++;
+                if (winningRounds < 3) {
+                    status.textContent = winningRounds + "/3"; // הצג את הסבבים המנצחים
+                    status.className = 'winner';
+                    setTimeout(() => {
+                        gameActive = true;
+                        bluePartPosition = Math.random() * (window.innerWidth - bluePart.offsetWidth);
+                        updatePositions();
+                        resetGreenArrow(); // איפוס החץ לפני סבב חדש
+                        status.textContent = "";
+                        instruction.textContent = "Press 'E' when the bar hits green area";
+                        requestAnimationFrame(moveArrow); // הפעל מחדש את החץ
+                    }, 1000);
+                } else {
+                    status.textContent = "You Won!";
+                    status.className = 'winner';
+                    // instruction.style.display = 'none'; // הסר את ההוראות
+                    restartBtn.style.display = 'inline-block'; // הצג את כפתור השחק שוב
+                }
+            } else {
+                status.textContent = "You Lost!";
+                status.className = 'loser';
+                // instruction.style.display = 'none'; // הסר את ההוראות
+                restartBtn.style.display = 'inline-block'; // הצג את כפתור השחק שוב
+            }
+            gameActive = false;
+        }
+
+        // הוסף את כפתור "התחל משחק" שיתחיל את המשחק
+        startBtn.addEventListener('click', function() {
+            gameActive = true;
+            startBtn.style.display = 'none'; // הסר את כפתור "התחל משחק"
+            bluePartPosition = Math.random() * (window.innerWidth - bluePart.offsetWidth);
+            greenArrow.style.width = '0%'; // אתחול של החץ
+            updatePositions();
+            status.textContent = "";
+            instruction.textContent = "Press 'E' when the bar hits green area";
+            instruction.style.display = 'block'; // הצג את ההוראות מחדש
+            requestAnimationFrame(moveArrow); // הפעל מחדש את החץ
+        });
+
+        // Check if the player presses E, e or ק at the right time
+        document.addEventListener('keydown', function(event) {
+            if ((event.key === 'e' || event.key === 'E' || event.key === 'ק') && gameActive) {
+                checkGameStatus();
+            }
+        });
+
+        // Restart the game
+        restartBtn.addEventListener('click', function() {
+            round = 1;
+            winningRounds = 0;
+            gameActive = true;
+            bluePartPosition = Math.random() * (window.innerWidth - bluePart.offsetWidth);
+            greenArrow.style.width = '0%'; // אתחול החץ
+            updatePositions();
+            status.textContent = "";
+            instruction.textContent = "Press 'E' when the bar hits green area";
+            instruction.style.display = 'block'; // הצג מחדש את ההוראות
+            restartBtn.style.display = 'none';
+            requestAnimationFrame(moveArrow); // הפעל מחדש את החץ
+        });
+    </script>
+
+</body>
+</html>

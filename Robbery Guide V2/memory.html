@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Game</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100vh;
+            padding: 20px;
+            background-color: #222834;
+            color: white;
+        }
+        *{
+            font-family: "Rubik", sans-serif;
+        }
+        #homePage {
+            position: absolute;
+            top: 2%;
+            left: 1%;
+            text-decoration: none;
+            font-family: 'Rubik', Arial, sans-serif;
+            padding: 10px 10px;
+            font-size: 1.4rem;
+            cursor: pointer;
+            color: white;
+        }
+        #refresh{
+            color: white;
+            transform: scale(1.7);
+            background: none;
+            border: none;
+            position: absolute;
+            top: 3%;
+            right: 2%;
+            transition: transform 0.5s ease-out; /* הוספת טרנזישן לסיבוב */
+        }
+        #refresh:hover{
+            cursor: pointer;
+            transform: scale(2.3) rotate(-360deg);
+        }
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 20px;
+        }
+        #box {
+            width: 800px;
+            padding: 50px;
+            background-color: #0000005b;
+            border: none;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 50px;
+        }
+        .progress-bar {
+            position: relative;
+            width: 100%;
+            height: 10px;
+            border-radius: 5px;
+            background-color: #35f05157;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+
+        .progress-bar-inner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            height: 100%;
+            background-color: #35f050;
+            border-radius: 20px;
+            width: 100%;
+            transition: width linear 1s;
+        }
+
+        .game-container {
+            display: grid;
+            grid-template-rows: repeat(4, 1fr);
+            grid-template-columns: repeat(6, 1fr);
+            grid-gap: 15px;
+            max-width: 800px;
+            width: 100%;
+        }
+
+        .card {
+            width: 100%;
+            padding-top: 100%;
+            position: relative;
+            background-color: #35f050;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            cursor: pointer;
+            transform: perspective(600px) rotateY(0deg);
+            transition: transform 0.6s, background-color 0.3s;
+        }
+
+        .card:hover {
+            background-color: #19db36;
+        }
+
+        .card.flipped {
+            transform: perspective(600px) rotateY(180deg);
+            background-color: #23ca3c;
+        }
+
+        .card i {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) rotateY(180deg);
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        .hidden {
+            visibility: hidden;
+        }
+
+        .popup {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        .popup-content {
+            background-color: rgb(48, 48, 48);
+            padding: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+            border-radius: 10px;
+        }
+        button {
+            margin-top: 20px;
+            padding: 10px 20px;
+            background-color: #35f050;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            border: none;
+            border-radius: 20px;
+            transition: 0.3s;
+        }
+        button:hover {
+            background-color: #1ea532;
+            transform: translateY(-5px);
+        }
+    </style>
+</head>
+<body>
+
+    <a id="homePage" href="index.html"><i class="fa-solid fa-house"></i> Home Page</a>
+    <i class="fa-solid fa-rotate-left" id="refresh" onclick="location.reload()"></i>
+
+    <h1>Memory Game</h1>
+
+    <div id="box">
+        <div class="game-container" id="game-container"></div>
+        <div class="progress-bar">
+            <div class="progress-bar-inner" id="progress-bar"></div>
+        </div>
+        <button id="start-button">Start game</button>
+    </div>
+
+    <!-- Popup -->
+    <div class="popup" id="popup">
+        <div class="popup-content">
+            <p id="popup-message"></p>
+            <button id="restart-button">Play again</button>
+        </div>
+    </div>
+
+    <script>
+        const icons = [
+            'fa-link', 'fa-bolt', 'fa-star', 'fa-laptop', 'fa-cloud', 'fa-lock',
+            'fa-link', 'fa-bolt', 'fa-star', 'fa-laptop', 'fa-cloud', 'fa-lock',
+            'fa-gamepad', 'fa-house', 'fa-bug', 'fa-ghost', 'fa-key', 'fa-gears',
+            'fa-gamepad', 'fa-house', 'fa-bug', 'fa-ghost', 'fa-key', 'fa-gears'
+        ];
+
+        let shuffledIcons = [...icons]; // Duplicate the icons array to preserve the original.
+        const gameContainer = document.getElementById('game-container');
+        let firstCard = null;
+        let secondCard = null;
+        let matches = 0;
+        let isFlipping = false;
+        let gameStarted = false;
+
+        function shuffleCards() {
+            shuffledIcons = shuffledIcons.sort(() => Math.random() - 0.5);
+        }
+
+        function createCard(icon) {
+            const card = document.createElement('div');
+            card.classList.add('card');
+
+            const iconElement = document.createElement('i');
+            iconElement.classList.add('fas', icon, 'hidden');
+            card.appendChild(iconElement);
+
+            card.addEventListener('click', () => {
+                if (isFlipping || card === firstCard || card.classList.contains('flipped')) return;
+
+                card.classList.add('flipped');
+                iconElement.classList.remove('hidden');
+
+                if (!firstCard) {
+                    firstCard = card;
+                } else {
+                    secondCard = card;
+                    checkMatch();
+                }
+            });
+
+            return card;
+        }
+
+        function checkMatch() {
+            isFlipping = true;
+            const firstIcon = firstCard.firstChild.classList[1];
+            const secondIcon = secondCard.firstChild.classList[1];
+
+            if (firstIcon === secondIcon) {
+                matches++;
+                resetSelection();
+                if (matches === icons.length / 2) {
+                    showPopup('You won!');
+                }
+            } else {
+                setTimeout(() => {
+                    firstCard.classList.remove('flipped');
+                    firstCard.firstChild.classList.add('hidden');
+                    secondCard.classList.remove('flipped');
+                    secondCard.firstChild.classList.add('hidden');
+                    resetSelection();
+                }, 1000);
+            }
+        }
+
+        function resetSelection() {
+            firstCard = null;
+            secondCard = null;
+            isFlipping = false;
+        }
+
+        function startTimer() {
+            const progressBar = document.getElementById('progress-bar');
+            let timeLeft = 60;
+            const interval = setInterval(() => {
+                if (!gameStarted) return;
+                timeLeft--;
+                progressBar.style.width = (timeLeft / 60) * 100 + '%';
+
+                if (timeLeft <= 0 || matches === icons.length / 2) {
+                    clearInterval(interval);
+                    showPopup(timeLeft <= 0 ? "Time's up!" : 'You won!');
+                }
+            }, 1000);
+        }
+
+        function startGame() {
+            shuffleCards(); // Shuffle the icons array each time
+            shuffledIcons.forEach(icon => {
+                const card = createCard(icon);
+                gameContainer.appendChild(card);
+            });
+
+            gameStarted = true;
+            startTimer();
+        }
+
+        function showPopup(message) {
+            document.getElementById('popup-message').textContent = message;
+            document.getElementById('popup').style.display = 'flex';
+        }
+
+        document.getElementById('start-button').addEventListener('click', () => {
+            document.getElementById('start-button').style.display = 'none';  // Hide the start button
+            gameContainer.innerHTML = '';
+            matches = 0;
+            gameStarted = false;
+            document.getElementById('popup').style.display = 'none';
+            startGame();
+        });
+
+        document.getElementById('restart-button').addEventListener('click', () => {
+            document.getElementById('start-button').style.display = 'none';
+            gameContainer.innerHTML = '';
+            matches = 0;
+            gameStarted = false;
+            document.getElementById('popup').style.display = 'none';
+            startGame();
+        });
+    </script>
+</body>
+</html>

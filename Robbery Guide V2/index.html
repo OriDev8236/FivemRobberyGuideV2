@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ERRP Robberies Guide</title>
+    <script src="https://kit.fontawesome.com/7715173514.js" crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="anonymous">
+    <link href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300..900;1,300..900&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: "Rubik", Arial, sans-serif;
+            background-color: #222834;
+            margin: 0;
+            padding: 0;
+            color: white;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden; /* למנוע גלילה */
+        }
+        header {
+            background-color: #333;
+            text-align: center;
+            padding: 1rem 0;
+        }
+        header h1 {
+            margin: 10px;
+        }
+        nav {
+            margin: 2rem auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            row-gap: 20px;
+            column-gap: 100px;
+            max-width: fit-content;
+            width: 80%;
+            text-align: center;
+        }
+        nav a {
+            text-decoration: none;
+            color: white;
+            background-color: #444;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column; /* טקסט מעל התמונה */
+            align-items: center;
+            justify-content: center;
+            gap: 5px; /* ריווח קטן בין טקסט לתמונה */
+            transition: background-color 0.3s;
+            min-height: 150px; /* גובה מינימלי כדי למנוע רווחים */
+            max-width: 250px; /* מגביל את רוחב כל כפתור */
+        }
+        nav a:hover {
+            background-color: #35f050;
+        }
+        footer {
+            text-align: center;
+            margin-top: auto;
+            padding: 1rem 0;
+            background-color: #333;
+            width: 100%;
+            position: fixed;
+            bottom: 0;
+        }
+        nav a img {
+            width: 85%;
+            height: auto;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Project ER Robberies Hacks Guide<br>(V4 UPDATE)</h1>
+    </header>
+
+    <nav>
+        <a href="lights-out-menu.html">
+            <span>Lights Out</span>
+            <img src="assests/lightsout.png" alt="Lights Out">
+        </a>
+        <a href="timing.html">
+            <span>Timing Game (V4)</span>
+            <img src="assests/timing.png" alt="Timing Game">
+        </a>
+        <a href="memory.html">
+            <span>Memory Game (V4)</span>
+            <img src="assests/memory.png" alt="Memory Game">
+        </a>
+        <a href="name-database.html">
+            <span>Fleeca Main Hack</span>
+            <img src="assests/fleeca.png" alt="Fleeca Main Hack">
+        </a>
+        <a href="fingerprint.html">
+            <span>Fingerprints</span>
+            <img src="assests/fingerprint.png" alt="Fingerprints">
+        </a>
+        <a href="code-game.html">
+            <span>Paleto Last Hack</span>
+            <img src="assests/paleto.png" alt="Paleto Last Hack">
+        </a>
+    </nav>
+
+    <footer>
+        <p>&copy; 2025 ERRP Robberies Guide</p>
+    </footer>
+
+</body>
+</html>
